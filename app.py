@@ -1017,12 +1017,11 @@ def page_analytics() -> None:
         text=[f"₹{impl:,.1f} L", f"₹{pred_val:,.1f} L" if pred_val else "—"],
         textposition="outside", textfont=dict(size=13, color="#C8E6F5"),
     ))
-       fig_cmp.update_layout(
-           title=dict(text="IMPLIED VS PREDICTED VALUATION (₹ LAKHS)",
-                      font=dict(family="Bebas Neue, sans-serif", size=14, color="#00C8BE"), x=0),
-           height=320, 
-           yaxis=dict(title="₹ Lakhs")
-       )
+    fig_cmp.update_layout(
+        title=dict(text="IMPLIED VS PREDICTED VALUATION (₹ LAKHS)",
+                   font=dict(family="Bebas Neue, sans-serif", size=14, color="#00C8BE"), x=0),
+        height=320, yaxis=dict(title="₹ Lakhs"), **_PL,
+    )
     st.plotly_chart(fig_cmp, use_container_width=True, config=CHART_CFG)
 
     st.markdown('<hr class="divl">', unsafe_allow_html=True)
