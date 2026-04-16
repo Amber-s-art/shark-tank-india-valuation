@@ -668,6 +668,33 @@ def get_model():
         return load_model_from_bytes(raw)
     return None, "no_model"
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Checking for logical deal breakers
+# ─────────────────────────────────────────────────────────────────────────────
+
+def check_dealbreakers(inputs: dict) -> list[str]:
+    """Evaluates inputs against hard investor thresholds."""
+    flags = []
+    
+    # 1. EBITDA Threshold
+    if inputs["ebitda"] <= -20:
+        flags.append("<strong>Severe Cash Burn:</strong> EBITDA ≤ -20L. High execution risk; sharks rarely fund deep burn unless it's a high-growth tech play.")
+        
+    # 2. SKU Bloat
+    if inputs["skus"] > 3000:
+        flags.append("<strong>Inventory Nightmare:</strong> > 3,000 SKUs. Indicates a lack of product focus (no 'hero' product) and massive working capital drain.")
+        
+    # 3. Gross Margin Floor
+    if inputs["gross_margin"] < 15:
+        flags.append("<strong>Broken Unit Economics:</strong> Gross Margin < 15%. Leaves almost no room to absorb marketing (CAC) and logistics costs at scale.")
+        
+    # 4. Net Margin Floor
+    if inputs["net_margin"] <= -30:
+        flags.append("<strong>Unsustainable Margins:</strong> Net Margin ≤ -30%. The path to profitability is incredibly steep, requiring a total operational pivot.")
+        
+    return flags
+       
 # ─────────────────────────────────────────────────────────────────────────────
 # PREPROCESSING  (exact replica of training pipeline)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1005,6 +1032,7 @@ def page_engine(model) -> None:
         st.session_state["show_anim"] = False   # clear AFTER injection
 
     # ── Result ────────────────────────────────────────────────────────────────
+   # ── Result ────────────────────────────────────────────────────────────────
     if st.session_state.get("pred_done") and st.session_state.get("last_pred") is not None:
         pred = st.session_state["last_pred"]
         inp  = st.session_state["last_inputs"]
@@ -1012,6 +1040,23 @@ def page_engine(model) -> None:
         delta_pct = ((pred - impl) / impl * 100) if impl > 0 else 0.0
 
         st.markdown('<hr class="divl">', unsafe_allow_html=True)
+        
+        # --- DEALBREAKER EVALUATION ---
+        dealbreakers = check_dealbreakers(inp)
+        if dealbreakers:
+            alerts_html = "".join([f"<li style='margin-bottom:.3rem; color:#C8E6F5; font-size:.85rem;'>{msg}</li>" for msg in dealbreakers])
+            st.markdown(f"""
+            <div style='background:rgba(230,57,70,.08); border:1px solid #E63946; border-radius:10px; padding:1.2rem; margin-bottom:1.5rem; animation: rbox-pulse 3s ease-in-out infinite;'>
+              <div style='font-family:"Bebas Neue",sans-serif; font-size:1.2rem; letter-spacing:.1em; color:#E63946; margin-bottom:.5rem;'>
+                🚨 DEALBREAKER WARNING — HIGH PROBABILITY OF "I'M OUT"
+              </div>
+              <ul style='margin:0; padding-left:1.2rem;'>
+                {alerts_html}
+              </ul>
+            </div>
+            """, unsafe_allow_html=True)
+        # ------------------------------
+
         r1, r2 = st.columns([1.1, 0.9], gap="large")
 
         with r1:
