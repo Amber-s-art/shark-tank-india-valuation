@@ -950,7 +950,7 @@ def _input_fragment(model) -> None:
             st.session_state.update({"last_inputs": inp, "last_pred": pred,
                                     "pred_done": True, "show_anim": True})
             append_history(inp, pred)
-            st.rerun()   # ← ADD THIS LINE — forces full-page rerun so animation + result appear
+            st.rerun(scope="app")   # ← Forces the outer page to render the result
         except Exception as e:
             st.error(f"Prediction failed: {e}")
             st.session_state["pred_done"] = False
