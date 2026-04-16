@@ -39,6 +39,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import statsmodels.api as sm
 import streamlit as st
+import streamlit.components.v1 as components
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
@@ -398,97 +399,206 @@ _PL = dict(
     yaxis=dict(gridcolor="rgba(255,255,255,.05)", linecolor="rgba(255,255,255,.07)", zeroline=False),
     margin=dict(l=10, r=10, t=40, b=10),
 )
+
+# ADD THIS after _PL = dict(...)
+def _pl(**overrides):
+    """Merge layout overrides into _PL without duplicate-key crashes."""
+    base = dict(_PL)
+    for k, v in overrides.items():
+        if k in base and isinstance(base[k], dict) and isinstance(v, dict):
+            base[k] = {**base[k], **v}   # deep-merge axis dicts
+        else:
+            base[k] = v
+    return base
+
 CHART_CFG = {"displayModeBar": False}
+
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SHARK ANIMATION  (SVG + JS injected via st.markdown)
 # ─────────────────────────────────────────────────────────────────────────────
 SHARK_ANIM_HTML = """
-<div id="shark-overlay" style="
-  position:fixed;top:0;left:0;right:0;bottom:0;
-  pointer-events:none;z-index:9999;overflow:hidden;">
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  /* Reset iframe body */
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background: transparent; overflow: hidden; }
 
-  <!-- animated bubbles -->
-  <div id="bubbles-container"></div>
+  /* ── All keyframes must live here — iframe has no parent CSS ── */
+  @keyframes shark-swim {
+    0%   { left: -220px; opacity: 0; transform: scaleX(1); }
+    8%   { opacity: 1; }
+    42%  { left: calc(50vw - 90px); opacity: 1; transform: scaleX(1); }
+    50%  { left: calc(50vw - 90px); opacity: 1; transform: scaleX(-1); }
+    92%  { left: -220px; opacity: 1; transform: scaleX(-1); }
+    100% { left: -220px; opacity: 0; transform: scaleX(-1); }
+  }
+  @keyframes shark-bite {
+    0%,100% { transform: scaleY(1) rotate(0deg); }
+    50%     { transform: scaleY(1.1) rotate(-4deg); }
+  }
+  @keyframes bubble-rise {
+    0%   { transform: translateY(0) scale(1); opacity: 0.75; }
+    100% { transform: translateY(-120px) scale(1.6); opacity: 0; }
+  }
+  @keyframes flash-in {
+    0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.6); }
+    30%  { opacity: 1; transform: translate(-50%,-50%) scale(1.08); }
+    70%  { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(0.9); }
+  }
+  @keyframes ripple {
+    0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.6; }
+    100% { transform: translate(-50%,-50%) scale(4); opacity: 0; }
+  }
 
-  <!-- shark SVG -->
-  <svg id="shark-svg"
-    viewBox="0 0 200 100" width="180" height="90"
-    style="position:absolute;bottom:30%;left:-200px;filter:drop-shadow(0 0 18px rgba(0,200,190,.55));
-           animation:shark-swim 3.2s ease-in-out forwards;">
+  /* Overlay covers the iframe viewport which sits in the page */
+  #overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
 
+  /* Shark */
+  #shark {
+    position: fixed;
+    bottom: 5%;
+    left: -220px;
+    width: 200px; height: 100px;
+    filter: drop-shadow(0 0 20px rgba(0,200,190,.65));
+    animation: shark-swim 3.8s cubic-bezier(.45,0,.55,1) forwards;
+    z-index: 100;
+  }
+  #shark-mouth-group {
+    animation: shark-bite 0.3s ease-in-out 1.6s 5 both;
+    transform-origin: 165px 55px;
+  }
+
+  /* Deal flash */
+  #deal-flash {
+    display: none;
+    position: fixed;
+    top: 40%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-family: 'Bebas Neue', 'Impact', sans-serif;
+    font-size: 3rem;
+    letter-spacing: .12em;
+    color: #F5C842;
+    text-shadow: 0 0 30px rgba(245,200,66,.9), 0 0 60px rgba(0,200,190,.6);
+    animation: flash-in 1.8s ease forwards;
+    z-index: 200;
+    white-space: nowrap;
+  }
+
+  /* Ripple ring at centre */
+  .ripple {
+    position: fixed;
+    top: 40%; left: 50%;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    border: 3px solid #00C8BE;
+    transform: translate(-50%,-50%) scale(0);
+    animation: ripple 1.2s ease-out forwards;
+    z-index: 150;
+  }
+</style>
+</head>
+<body>
+<div id="overlay">
+
+  <!-- Shark SVG -->
+  <svg id="shark" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
     <!-- body -->
-    <ellipse cx="100" cy="55" rx="75" ry="28" fill="#0A2540" stroke="#00C8BE" stroke-width="1.2"/>
-    <!-- belly -->
-    <ellipse cx="100" cy="68" rx="55" ry="12" fill="#062035" opacity=".7"/>
-    <!-- eye -->
-    <circle cx="155" cy="48" r="5" fill="#00C8BE" opacity=".9"/>
-    <circle cx="156" cy="47" r="2" fill="#020B18"/>
+    <ellipse cx="100" cy="55" rx="75" ry="28" fill="#0A2540" stroke="#00C8BE" stroke-width="1.4"/>
+    <!-- belly highlight -->
+    <ellipse cx="100" cy="67" rx="54" ry="11" fill="#062035" opacity=".75"/>
+    <!-- glow line top -->
+    <path d="M32,36 Q100,22 170,43" stroke="#00C8BE" stroke-width=".7" fill="none" opacity=".45"/>
     <!-- dorsal fin -->
-    <polygon points="95,27 120,10 130,27" fill="#0D2E50" stroke="#00C8BE" stroke-width="1"/>
+    <polygon points="92,27 118,8 131,27" fill="#0D2E50" stroke="#00C8BE" stroke-width="1.1"/>
     <!-- tail fin -->
-    <polygon points="28,55 5,30 5,80" fill="#0D2E50" stroke="#00C8BE" stroke-width="1"/>
-    <!-- pectoral fins -->
-    <polygon points="110,65 90,85 130,75" fill="#0A2540" stroke="#00C8BE" stroke-width=".8"/>
+    <polygon points="27,55 4,28 4,82" fill="#0D2E50" stroke="#00C8BE" stroke-width="1.1"/>
+    <!-- tail fin lower -->
+    <polygon points="27,55 4,55 12,72" fill="#0A2540" stroke="#00C8BE" stroke-width=".8"/>
+    <!-- pectoral fin -->
+    <polygon points="112,65 88,86 132,76" fill="#0A2540" stroke="#00C8BE" stroke-width=".9"/>
     <!-- gills -->
-    <line x1="140" y1="40" x2="135" y2="70" stroke="#00C8BE" stroke-width=".8" opacity=".6"/>
-    <line x1="148" y1="38" x2="143" y2="68" stroke="#00C8BE" stroke-width=".8" opacity=".6"/>
-    <!-- mouth (animated bite) -->
-    <g id="shark-mouth" style="animation:shark-bite .35s ease-in-out 1.4s 4 both;">
-      <path d="M165,55 Q180,48 188,55 Q180,62 165,55Z"
-            fill="#00C8BE" opacity=".85"/>
-      <!-- teeth -->
-      <polygon points="168,55 171,50 174,55" fill="white"/>
-      <polygon points="174,55 177,50 180,55" fill="white"/>
-      <polygon points="180,55 183,50 186,55" fill="white"/>
+    <line x1="138" y1="39" x2="133" y2="69" stroke="#00C8BE" stroke-width="1" opacity=".55"/>
+    <line x1="146" y1="37" x2="141" y2="67" stroke="#00C8BE" stroke-width="1" opacity=".55"/>
+    <!-- eye outer glow -->
+    <circle cx="155" cy="47" r="7" fill="#00C8BE" opacity=".25"/>
+    <!-- eye -->
+    <circle cx="155" cy="47" r="5" fill="#00C8BE" opacity=".95"/>
+    <circle cx="156" cy="46" r="2.2" fill="#020B18"/>
+    <circle cx="157" cy="45" r=".7" fill="#00C8BE" opacity=".6"/>
+    <!-- animated mouth group -->
+    <g id="shark-mouth-group">
+      <path d="M164,55 Q180,46 190,55 Q180,64 164,55Z" fill="#00C8BE" opacity=".9"/>
+      <polygon points="167,55 170,49 173,55" fill="white"/>
+      <polygon points="173,55 176,49 179,55" fill="white"/>
+      <polygon points="179,55 182,49 185,55" fill="white"/>
+      <polygon points="186,55 188,50 190,55" fill="white"/>
     </g>
-    <!-- teal glow line along top -->
-    <path d="M30,35 Q100,22 170,42" stroke="#00C8BE" stroke-width=".6" fill="none" opacity=".4"/>
   </svg>
 
-  <!-- deal struck flash -->
-  <div id="deal-flash" style="
-    display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    font-family:'Bebas Neue',sans-serif;font-size:5rem;letter-spacing:.1em;
-    color:#F5C842;text-shadow:0 0 40px rgba(245,200,66,.8),0 0 80px rgba(0,200,190,.5);
-    animation:teal-flicker .4s ease-in-out 2s 5 both;z-index:10000;pointer-events:none;">
-    DEAL STRUCK!
-  </div>
+  <!-- Deal flash text -->
+  <div id="deal-flash">DEAL STRUCK!</div>
+
 </div>
 
 <script>
 (function(){
-  // bubbles
-  const bc = document.getElementById('bubbles-container');
-  for(let i=0;i<18;i++){
-    const b = document.createElement('div');
-    const sz = 6 + Math.random()*14;
-    b.style.cssText = `
-      position:absolute;
-      width:${sz}px;height:${sz}px;
-      border-radius:50%;
-      border:1px solid rgba(0,200,190,${.3+Math.random()*.5});
-      background:rgba(0,200,190,${.04+Math.random()*.08});
-      left:${10+Math.random()*80}%;
-      bottom:${5+Math.random()*40}%;
-      animation:bubble-rise ${1.5+Math.random()*2}s ease-out ${Math.random()*2}s forwards;
-    `;
-    bc.appendChild(b);
+  const overlay = document.getElementById('overlay');
+
+  // ── Bubbles ──────────────────────────────────────────────────────────────
+  for (let i = 0; i < 22; i++) {
+    const b  = document.createElement('div');
+    const sz = 5 + Math.random() * 16;
+    const delay = Math.random() * 2.5;
+    const dur   = 1.4 + Math.random() * 2;
+    b.style.cssText = [
+      'position:fixed',
+      `width:${sz}px`, `height:${sz}px`,
+      'border-radius:50%',
+      `border:1.5px solid rgba(0,200,190,${(0.25 + Math.random() * 0.55).toFixed(2)})`,
+      `background:rgba(0,200,190,${(0.03 + Math.random() * 0.09).toFixed(2)})`,
+      `left:${8 + Math.random() * 84}%`,
+      `bottom:${4 + Math.random() * 45}%`,
+      `animation:bubble-rise ${dur}s ease-out ${delay}s forwards`,
+      'z-index:90',
+    ].join(';');
+    overlay.appendChild(b);
   }
 
-  // show deal flash at peak
-  setTimeout(()=>{
-    const f = document.getElementById('deal-flash');
-    if(f) f.style.display='block';
-  }, 1800);
+  // ── Ripple rings ─────────────────────────────────────────────────────────
+  [1700, 2000, 2300].forEach((t, i) => {
+    setTimeout(() => {
+      const r = document.createElement('div');
+      r.className = 'ripple';
+      r.style.animationDelay = '0s';
+      overlay.appendChild(r);
+    }, t);
+  });
 
-  // remove entire overlay after animation
-  setTimeout(()=>{
-    const el = document.getElementById('shark-overlay');
-    if(el) el.remove();
-  }, 4000);
+  // ── Deal flash ────────────────────────────────────────────────────────────
+  setTimeout(() => {
+    const f = document.getElementById('deal-flash');
+    if (f) f.style.display = 'block';
+  }, 1700);
+
+  // ── Cleanup ───────────────────────────────────────────────────────────────
+  setTimeout(() => {
+    if (overlay) overlay.style.display = 'none';
+  }, 5000);
+
 })();
 </script>
+</body>
+</html>
 """
 
 # Ocean wave background strip for sidebar
@@ -824,20 +934,23 @@ def _input_fragment(model) -> None:
     with btn_col:
         clicked = st.button("🦈  CALCULATE VALUATION", use_container_width=True)
 
+
+    # AFTER — add st.rerun() so the outer page_engine re-runs to show animation + result:
     if clicked:
         inp = dict(
-            industry=industry, pitcher_age_group=pitcher_age_group,
-            company_age=company_age, ask_amount=ask_amount,
-            offered_equity=offered_equity, has_patents=has_patents,
-            bootstrapped=bootstrapped, yearly_revenue=yearly_revenue,
-            gross_margin=gross_margin, net_margin=net_margin,
-            ebitda=ebitda, skus=skus,
-        )
+                industry=industry, pitcher_age_group=pitcher_age_group,
+                company_age=company_age, ask_amount=ask_amount,
+                offered_equity=offered_equity, has_patents=has_patents,
+                bootstrapped=bootstrapped, yearly_revenue=yearly_revenue,
+                gross_margin=gross_margin, net_margin=net_margin,
+                ebitda=ebitda, skus=skus,
+            )
         try:
             pred = run_prediction(model, inp)
             st.session_state.update({"last_inputs": inp, "last_pred": pred,
-                                     "pred_done": True, "show_anim": True})
+                                    "pred_done": True, "show_anim": True})
             append_history(inp, pred)
+            st.rerun()   # ← ADD THIS LINE — forces full-page rerun so animation + result appear
         except Exception as e:
             st.error(f"Prediction failed: {e}")
             st.session_state["pred_done"] = False
@@ -880,10 +993,16 @@ def page_engine(model) -> None:
     # Fragment — partial rerun only
     _input_fragment(model)
 
-    # ── Shark animation (fires once per successful prediction) ────────────────
+    # ── Shark animation ───────────────────────────────────────────────────────
+    # FIX 1: st.markdown strips <script> tags — use components.html() instead.
+    # FIX 2: Do NOT set show_anim=False here; clear it AFTER rendering so the
+    #         browser actually receives the HTML before the state is wiped.
     if st.session_state.get("show_anim"):
-        st.markdown(SHARK_ANIM_HTML, unsafe_allow_html=True)
-        st.session_state["show_anim"] = False
+        # height=1 keeps the iframe minimal in layout; the animation uses
+        # position:fixed inside the iframe which IS visible within the iframe
+        # viewport. We need enough height for the shark to show.
+        components.html(SHARK_ANIM_HTML, height=300, scrolling=False)
+        st.session_state["show_anim"] = False   # clear AFTER injection
 
     # ── Result ────────────────────────────────────────────────────────────────
     if st.session_state.get("pred_done") and st.session_state.get("last_pred") is not None:
@@ -1017,11 +1136,13 @@ def page_analytics() -> None:
         text=[f"₹{impl:,.1f} L", f"₹{pred_val:,.1f} L" if pred_val else "—"],
         textposition="outside", textfont=dict(size=13, color="#C8E6F5"),
     ))
-    fig_cmp.update_layout(
+
+    fig_cmp.update_layout(**_pl(
         title=dict(text="IMPLIED VS PREDICTED VALUATION (₹ LAKHS)",
-                   font=dict(family="Bebas Neue, sans-serif", size=14, color="#00C8BE"), x=0),
-        height=320, yaxis=dict(title="₹ Lakhs"), **_PL,
-    )
+                font=dict(family="Bebas Neue, sans-serif", size=14, color="#00C8BE"), x=0),
+        height=320,
+        yaxis=dict(title="₹ Lakhs"),
+    ))
     st.plotly_chart(fig_cmp, use_container_width=True, config=CHART_CFG)
 
     st.markdown('<hr class="divl">', unsafe_allow_html=True)
@@ -1226,17 +1347,22 @@ def page_history() -> None:
             mode="lines+markers", line=dict(color="#F5C842", width=1.8, dash="dot"),
             marker=dict(size=7, color="#F5C842"), name="Implied (Ask/Equity)",
         ))
-        ft.update_layout(xaxis=dict(title="Prediction Run #", tickmode="linear"),
-                         yaxis=dict(title="₹ Lakhs"), height=320,
-                         legend=dict(font=dict(color="#C8E6F5"), bgcolor="rgba(0,0,0,0)"), **_PL)
+
+        ft.update_layout(**_pl(
+            xaxis=dict(title="Prediction Run #", tickmode="linear"),
+            yaxis=dict(title="₹ Lakhs"),
+            height=320,
+            legend=dict(font=dict(color="#C8E6F5"), bgcolor="rgba(0,0,0,0)"),
+        ))
         st.plotly_chart(ft, use_container_width=True, config=CHART_CFG)
 
         st.markdown('<p class="cap">INDUSTRIES TESTED</p>', unsafe_allow_html=True)
         ic = hist["Industry"].value_counts().reset_index(); ic.columns = ["Industry", "Count"]
         fi = px.bar(ic, x="Count", y="Industry", orientation="h", color="Count",
                     color_continuous_scale=["rgba(0,200,190,.3)", "#00C8BE"])
-        fi.update_layout(height=max(180, len(ic)*38), showlegend=False,
-                          coloraxis_showscale=False, **_PL)
+        fi.update_layout(**_pl(
+                          height=max(180, len(ic)*38), showlegend=False,
+                          coloraxis_showscale=False))
         fi.update_traces(marker_line_width=0)
         st.plotly_chart(fi, use_container_width=True, config=CHART_CFG)
 
