@@ -11,8 +11,8 @@
 
 ## 📌 Live Demo
 
-**[🚀 Launch the App](https://your-app-name.streamlit.app)**
-*(Replace this link with your actual Streamlit Cloud URL after deployment)*
+**[ STARTUP VALUATION PREDICTOR]([[https://your-app-name.streamlit.app](https://shark-tank-india-valuation-w2cqtqtgfsnkyjtbe9fwrh.streamlit.app/))]**
+
 
 ---
 
@@ -125,84 +125,6 @@ Raw CSV  →  data_cleaning.ipynb  →  Cleaned Excel
 | Outlier method | Externally studentized residuals (\|r\| > 2.5) |
 | Features | 28 (17 industry dummies + 11 numeric) |
 
----
-
-## 🚀 Deployment Guide
-
-### Option A — Streamlit Community Cloud (Recommended, Free)
-
-**Step 1: Push your project to GitHub**
-
-```bash
-# Navigate to your project folder
-cd path/to/shark-tank-india-valuation
-
-# Initialise a git repository
-git init
-
-# Add all files
-git add .
-
-# Make your first commit
-git commit -m "Initial commit: Shark Tank India Valuation Predictor"
-
-# Connect to your GitHub repository
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-
-# Push to GitHub
-git push -u origin main
-```
-
-**Step 2: Deploy on Streamlit Community Cloud**
-
-1. Go to **[share.streamlit.io](https://share.streamlit.io)** and sign in with GitHub
-2. Click **"New app"**
-3. Fill in the form:
-   - **Repository:** `YOUR_USERNAME/YOUR_REPO_NAME`
-   - **Branch:** `main`
-   - **Main file path:** `app.py`
-4. Click **"Deploy!"**
-5. Wait ~2 minutes — your app will be live at `https://your-app-name.streamlit.app`
-
-**Step 3: Update the badge in this README**
-
-Replace this line:
-```
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://your-app-name.streamlit.app)
-```
-With your actual URL from Streamlit Cloud.
-
----
-
-### Option B — Run Locally
-
-**Prerequisites:** Python 3.9 or higher
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-cd YOUR_REPO_NAME
-
-# 2. Create a virtual environment (recommended)
-python -m venv venv
-
-# Activate it:
-# Windows:
-venv\Scripts\activate
-# macOS / Linux:
-source venv/bin/activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Run the app
-streamlit run app.py
-```
-
-The app opens automatically at `http://localhost:8501`
-
----
-
 ## 📊 App Pages
 
 ### 🦈 Page 1 — Valuation Engine
@@ -310,8 +232,8 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 ## 👤 Author
 
 **Your Name**
-- GitHub: [@YOUR_USERNAME](https://github.com/YOUR_USERNAME)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/your-profile)
+- GitHub: [Amber Agrawal](https://github.com/YOUR_USERNAME)
+- LinkedIn: [Amber Agrawal](https://linkedin.com/in/your-profile)
 
 ---
 
