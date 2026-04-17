@@ -233,7 +233,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 **Your Name**
 - GitHub: [Amber Agrawal](https://github.com/Amber-s-art)
-- LinkedIn: [Amber Agrawal](www.linkedin.com/in/amber-agrawal)
+- LinkedIn: [Amber Agrawal](https://www.linkedin.com/in/amber-agrawal/www.linkedin.com/in/amber-agrawal)
 
 ---
 
