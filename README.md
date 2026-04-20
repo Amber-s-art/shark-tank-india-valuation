@@ -244,9 +244,9 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 - LinkedIn: [Amber Agrawal](https://www.linkedin.com/in/amber-agrawal/www.linkedin.com/in/amber-agrawal)
 
 
-*Kalu**
-- GitHub: [Amber Agrawal](https://github.com/Amber-s-art)
-- LinkedIn: [Amber Agrawal](https://www.linkedin.com/in/amber-agrawal/www.linkedin.com/in/amber-agrawal)
+*Kalyani**
+- GitHub: [kalu](https://github.com/Amber-s-art)
+- LinkedIn: [kalul](https://www.linkedin.com/in/amber-agrawal/www.linkedin.com/in/amber-agrawal)
 
 ---
 
