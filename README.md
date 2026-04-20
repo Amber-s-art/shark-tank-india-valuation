@@ -231,7 +231,20 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ## 👤 Author
 
-**Your Name**
+**Amber Agrawal**
+- GitHub: [Amber Agrawal](https://github.com/Amber-s-art)
+- LinkedIn: [Amber Agrawal](https://www.linkedin.com/in/amber-agrawal/www.linkedin.com/in/amber-agrawal)
+
+*Aditya Nagsen**
+- GitHub: [Aditya Nagsen](https://github.com/Amber-s-art)
+- LinkedIn: [Aditya Nagsen](https://www.linkedin.com/in/amber-agrawal/www.linkedin.com/in/amber-agrawal)
+
+*Oishee **
+- GitHub: [Amber Agrawal](https://github.com/Amber-s-art)
+- LinkedIn: [Amber Agrawal](https://www.linkedin.com/in/amber-agrawal/www.linkedin.com/in/amber-agrawal)
+
+
+*Kalu**
 - GitHub: [Amber Agrawal](https://github.com/Amber-s-art)
 - LinkedIn: [Amber Agrawal](https://www.linkedin.com/in/amber-agrawal/www.linkedin.com/in/amber-agrawal)
 
